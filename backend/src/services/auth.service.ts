@@ -1,4 +1,4 @@
-import { getRepository } from 'typeorm';
+import { AppDataSource } from '../config/database';
 import { User } from '../entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
@@ -6,7 +6,7 @@ import { RegisterDto, LoginDto } from '../types';
 import { ApiError } from '../utils/api-error';
 
 export class AuthService {
-  private userRepository = getRepository(User);
+  private userRepository = AppDataSource.getRepository(User);
 
   async register(registerDto: RegisterDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({ 
@@ -27,20 +27,23 @@ export class AuthService {
     return this.userRepository.save(user);
   }
 
-  async login(loginDto: LoginDto): Promise<string> {
+  async login(loginDto: LoginDto): Promise<{ token: string; user: Omit<User, 'password'> }> {
     const user = await this.userRepository.findOne({ 
       where: { username: loginDto.username },
-      select: ['id', 'username', 'password', 'avatar']
+      select: ['id', 'username', 'password', 'avatar', 'balance']
     });
     
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new ApiError(401, 'Invalid credentials');
     }
 
-    return jwt.sign(
+    const { password, ...userWithoutPassword } = user;
+    const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '1h' }
     );
+
+    return { token, user: userWithoutPassword };
   }
 }

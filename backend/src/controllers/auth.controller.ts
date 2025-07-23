@@ -3,12 +3,10 @@ import { AuthService } from '../services/auth.service';
 import { ApiResponse } from '../utils/api-response';
 import { RegisterDto, LoginDto } from '../types';
 
-// 创建路由实例
-const authRouter = Router();
+const router = Router();
 const authService = new AuthService();
 
-// 用户注册
-authRouter.post('/register', async (req, res, next) => {
+router.post('/register', async (req, res, next) => {
   try {
     const registerDto: RegisterDto = req.body;
     const user = await authService.register(registerDto);
@@ -18,16 +16,14 @@ authRouter.post('/register', async (req, res, next) => {
   }
 });
 
-// 用户登录
-authRouter.post('/login', async (req, res, next) => {
+router.post('/login', async (req, res, next) => {
   try {
     const loginDto: LoginDto = req.body;
-    const token = await authService.login(loginDto);
-    res.json(ApiResponse.success({ token }));
+    const { token, user } = await authService.login(loginDto);
+    res.json(ApiResponse.success({ token, user }));
   } catch (error) {
     next(error);
   }
 });
 
-// 导出路由实例
-export { authRouter }; 
+export default router ;

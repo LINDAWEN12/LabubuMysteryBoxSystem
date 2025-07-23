@@ -1,18 +1,31 @@
 import { Router } from 'express';
 import { BlindBoxService } from '../services/blindbox.service';
-
+import { AuthenticatedRequest } from '../types/custom-request';
+import { ApiError } from '../utils/api-error';
 const router = Router();
-const service = new BlindBoxService();
+let blindBoxService: BlindBoxService;
 
-router.post('/:id/draw', async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-  
-  const result = await service.draw(
-    parseInt(req.params.id),
-    req.user.id
-  );
-  
-  res.json(result);
+// 添加初始化中间件
+router.use(async (req, res, next) => {
+  if (!blindBoxService) {
+    blindBoxService = await BlindBoxService.createInstance();
+  }
+  next();
 });
 
-export default router;
+router.post('/:id/draw', async (req: AuthenticatedRequest, res, next) => {
+  try {
+    if (!req.user) throw new ApiError(401, 'Unauthorized');
+    
+    const result = await blindBoxService.draw(
+      parseInt(req.params.id),
+      req.user.id
+    );
+    
+    res.json(result);
+  } catch (error) {
+    next(error); // 将错误传递给 errorMiddleware
+  }
+});
+
+export { router as blindboxRouter };

@@ -1,8 +1,14 @@
-import { getRepository } from 'typeorm';
+import { AppDataSource } from '../config/database';
 import { Order } from '../entities/order.entity';
 
 export class OrderService {
-  private orderRepository = getRepository(Order);
+  private orderRepository = AppDataSource.getRepository(Order);
+
+  // 添加静态初始化方法
+  static async createInstance() {
+    await AppDataSource.initialize();
+    return new OrderService();
+  }
 
   async getUserOrders(userId: number) {
     return this.orderRepository.find({

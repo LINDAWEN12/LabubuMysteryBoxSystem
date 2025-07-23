@@ -1,8 +1,14 @@
-import { getRepository } from 'typeorm';
+import { AppDataSource } from '../config/database';
 import { Showcase } from '../entities/showcase.entity';
 
 export class ShowcaseService {
-  private showcaseRepository = getRepository(Showcase);
+  private showcaseRepository = AppDataSource.getRepository(Showcase);
+
+  // 添加静态初始化方法
+  static async createInstance() {
+    await AppDataSource.initialize();
+    return new ShowcaseService();
+  }
 
   async getAll() {
     return this.showcaseRepository.find({
@@ -21,13 +27,11 @@ export class ShowcaseService {
     return this.showcaseRepository.save(showcase);
   }
 
-async delete(id: number, userId: number): Promise<boolean> {
-  const result = await this.showcaseRepository.delete({
-    id,
-    user: { id: userId }
-  });
-  
-  // 更健壮的检查方式
-  return !!result?.affected;
-}
+  async delete(id: number, userId: number): Promise<boolean> {
+    const result = await this.showcaseRepository.delete({
+      id,
+      user: { id: userId }
+    });
+    return !!result?.affected;
+  }
 }

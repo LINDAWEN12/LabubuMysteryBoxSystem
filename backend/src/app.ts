@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import { AppDataSource, initializeDatabase } from './config/database';
 import  authRouter  from './controllers/auth.controller';
-import  blindboxRouter  from './controllers/blindbox.controller';
-import  orderRouter  from './controllers/order.controller';
-import  showcaseRouter  from './controllers/showcase.controller';
+import  {blindboxRouter}  from './controllers/blindbox.controller';
+import  {orderRouter}  from './controllers/order.controller';
+import  {showcaseRouter}  from './controllers/showcase.controller';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { loggerMiddleware } from './middlewares/logger.middleware';
@@ -39,6 +39,16 @@ class App {
   }
 
   private initializeRoutes(): void {
+
+this.app.get('/', (req, res) => {
+    res.json({
+      status: 'running',
+      version: '1.0.0',
+      timestamp: new Date().toISOString()
+    });
+  });
+
+
     // Public routes
     this.app.use('/api/auth', authRouter);
 

@@ -1,56 +1,69 @@
 import { Router } from 'express';
 import { ShowcaseService } from '../services/showcase.service';
+import { AuthenticatedRequest } from '../types/custom-request';
+import { ApiError } from '../utils/api-error';
 
 const router = Router();
-const showcaseService = new ShowcaseService();
+let showcaseService: ShowcaseService;
+
+// 添加初始化中间件
+router.use(async (req, res, next) => {
+  if (!showcaseService) {
+    showcaseService = await ShowcaseService.createInstance();
+  }
+  next();
+});
 
 // 获取所有玩家秀
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const showcases = await showcaseService.getAll();
-    res.json(showcases);
+    res.json({
+      success: true,
+      data: showcases
+    });
   } catch (error) {
-    res.status(500).json({ error: '获取玩家秀失败' });
+    next(error);
   }
 });
 
 // 创建玩家秀
-router.post('/', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: '请先登录' });
-  }
-
+router.post('/', async (req: AuthenticatedRequest, res, next) => {
   try {
+    if (!req.user) throw new ApiError(401, '请先登录');
+    
     const showcase = await showcaseService.create({
       ...req.body,
       userId: req.user.id
     });
-    res.status(201).json(showcase);
+    
+    res.status(201).json({
+      success: true,
+      data: showcase
+    });
   } catch (error) {
-    res.status(400).json({ error: '创建玩家秀失败' });
+    next(error);
   }
 });
 
 // 删除玩家秀
-router.delete('/:id', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: '请先登录' });
-  }
-
+router.delete('/:id', async (req: AuthenticatedRequest, res, next) => {
   try {
+    if (!req.user) throw new ApiError(401, '请先登录');
+    
     const success = await showcaseService.delete(
       parseInt(req.params.id),
       req.user.id
     );
     
     if (!success) {
-      return res.status(404).json({ error: '玩家秀不存在或无权删除' });
+      throw new ApiError(404, '玩家秀不存在或无权删除');
     }
     
     res.status(204).end();
   } catch (error) {
-    res.status(500).json({ error: '删除玩家秀失败' });
+    next(error);
   }
 });
 
-export default router;
+export const showcaseRouter = router;

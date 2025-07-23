@@ -1,43 +1,55 @@
 import { Router } from 'express';
 import { OrderService } from '../services/order.service';
+import { AuthenticatedRequest } from '../types/custom-request';
+import { ApiError } from '../utils/api-error';
 
 const router = Router();
-const orderService = new OrderService();
+let orderService: OrderService;
+
+// 添加初始化中间件
+router.use(async (req, res, next) => {
+  if (!orderService) {
+    orderService = await OrderService.createInstance();
+  }
+  next();
+});
 
 // 获取用户所有订单
-router.get('/', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: '请先登录' });
-  }
-
+router.get('/', async (req: AuthenticatedRequest, res, next) => {
   try {
+    if (!req.user) throw new ApiError(401, '请先登录');
+    
     const orders = await orderService.getUserOrders(req.user.id);
-    res.json(orders);
+    res.json({
+      success: true,
+      data: orders
+    });
   } catch (error) {
-    res.status(500).json({ error: '获取订单失败' });
+    next(error);
   }
 });
 
 // 获取单个订单详情
-router.get('/:id', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: '请先登录' });
-  }
-
+router.get('/:id', async (req: AuthenticatedRequest, res, next) => {
   try {
+    if (!req.user) throw new ApiError(401, '请先登录');
+    
     const order = await orderService.getOrderById(
       parseInt(req.params.id),
       req.user.id
     );
     
     if (!order) {
-      return res.status(404).json({ error: '订单不存在' });
+      throw new ApiError(404, '订单不存在');
     }
     
-    res.json(order);
+    res.json({
+      success: true,
+      data: order
+    });
   } catch (error) {
-    res.status(500).json({ error: '获取订单详情失败' });
+    next(error);
   }
 });
 
-export default router;
+export const orderRouter = router;

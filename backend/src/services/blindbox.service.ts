@@ -1,4 +1,4 @@
-import { getRepository } from 'typeorm';
+import { AppDataSource } from '../config/database';
 import { BlindBox } from '../entities/blindbox.entity';
 import { BoxItem } from '../entities/box-item.entity';
 import { User } from '../entities/user.entity';
@@ -6,10 +6,15 @@ import { Order } from '../entities/order.entity';
 import { ApiError } from '../utils/api-error';
 
 export class BlindBoxService {
-  private blindBoxRepository = getRepository(BlindBox);
-  private userRepository = getRepository(User);
-  private orderRepository = getRepository(Order);
+  private blindBoxRepository = AppDataSource.getRepository(BlindBox);
+  private userRepository = AppDataSource.getRepository(User);
+  private orderRepository = AppDataSource.getRepository(Order);
 
+  // 添加静态初始化方法
+  static async createInstance() {
+    await AppDataSource.initialize();
+    return new BlindBoxService();
+  }
   async getAll(): Promise<BlindBox[]> {
     return this.blindBoxRepository.find({ 
       relations: ['items'] 

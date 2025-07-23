@@ -3,9 +3,9 @@ import * as jwt from 'jsonwebtoken';
 import { getRepository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { ApiError } from '../utils/api-error';
-
+import { AuthenticatedRequest } from '../types/custom-request';
 export async function authMiddleware(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {

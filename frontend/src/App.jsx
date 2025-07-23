@@ -8,7 +8,6 @@ import Profile from './pages/Profile'
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-pink-50 to-purple-50">
-      {/* 主内容区域 - 添加pb-20给底部导航留空间 */}
       <main className="flex-grow container py-8 pb-20">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -17,11 +16,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
-      
-      {/* 底部导航栏 */}
       <Navbar />
-      
-      {/* 移除原有的页脚，因为现在有底部导航栏 */}
     </div>
   )
 }

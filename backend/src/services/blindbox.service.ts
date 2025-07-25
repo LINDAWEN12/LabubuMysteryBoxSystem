@@ -11,9 +11,10 @@ export class BlindBoxService {
   private orderRepository = AppDataSource.getRepository(Order);
 
   // 添加静态初始化方法
-  static async createInstance() {
-    await AppDataSource.initialize();
-    return new BlindBoxService();
+  constructor() {
+    if (!AppDataSource.isInitialized) {
+      throw new Error('数据库未初始化！请先调用 AppDataSource.initialize()');
+    }
   }
   async getAll(): Promise<BlindBox[]> {
     return this.blindBoxRepository.find({ 

@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { BlindBoxService } from '../services/blindbox.service';
 import { AuthenticatedRequest } from '../types/custom-request';
 import { ApiError } from '../utils/api-error';
+import { AppDataSource } from '../config/database';
 const router = Router();
 let blindBoxService: BlindBoxService;
 
 // 添加初始化中间件
 router.use(async (req, res, next) => {
   if (!blindBoxService) {
-    blindBoxService = await BlindBoxService.createInstance();
+    blindBoxService = new BlindBoxService();
   }
   next();
 });

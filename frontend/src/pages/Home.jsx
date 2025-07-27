@@ -1,4 +1,26 @@
+import { useEffect, useState } from 'react';
+import { getBlindBoxes } from '../api/blindboxes';
+import FeatureCard from '../components/FeatureCard';
+
 export default function Home() {
+  const [featuredBox, setFeaturedBox] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedBox = async () => {
+      try {
+        const boxes = await getBlindBoxes();
+        setFeaturedBox(boxes[0]); // 获取第一个盲盒作为推荐
+      } catch (error) {
+        console.error('获取推荐盲盒失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchFeaturedBox();
+  }, []);
+
   return (
     <div className="pb-16">
       <div className="bg-gradient-to-br from-pink-400 to-purple-500 text-white p-6 rounded-b-3xl shadow-lg">
@@ -8,11 +30,31 @@ export default function Home() {
 
       <div className="p-4">
         <h2 className="text-xl font-bold mb-4 text-purple-800">今日推荐</h2>
-        <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-300 to-purple-400 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">新品盲盒预告</span>
+        
+        {loading ? (
+          <div className="h-48 rounded-2xl bg-gray-100 animate-pulse"></div>
+        ) : featuredBox ? (
+          <div 
+            className="relative h-48 rounded-2xl overflow-hidden mb-6"
+            style={{
+              backgroundImage: `linear-gradient(to right, rgba(236, 72, 153, 0.7), rgba(168, 85, 247, 0.7))`,
+            }}
+          >
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <div className="text-center text-white">
+                <h3 className="text-xl font-bold mb-1">{featuredBox.name}</h3>
+                <p className="text-sm opacity-90 mb-3">{featuredBox.description}</p>
+                <button className="bg-white text-pink-600 px-4 py-1 rounded-full text-sm font-medium">
+                  立即探索
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="h-48 bg-gray-100 rounded-2xl flex items-center justify-center">
+            <span className="text-gray-500">暂无推荐</span>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <FeatureCard 
@@ -32,17 +74,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-  )
-}
-
-function FeatureCard({ title, icon, bgColor, textColor, link }) {
-  return (
-    <a 
-      href={link}
-      className={`${bgColor} ${textColor} p-4 rounded-2xl flex flex-col items-center justify-center h-32 shadow-md hover:shadow-lg transition-all`}
-    >
-      <span className="text-3xl mb-2">{icon}</span>
-      <span className="font-semibold">{title}</span>
-    </a>
-  )
+  );
 }

@@ -16,7 +16,7 @@ export class BoxItem {
   weight!: number; // 抽中权重
 
   @Column()
-  image!: string;
+  imageUrl!: string;
 
   @ManyToOne(() => BlindBox, box => box.items)
   box!: BlindBox;

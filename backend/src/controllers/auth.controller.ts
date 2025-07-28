@@ -126,8 +126,25 @@ router.post('/login', async (req, res, next) => {
   try {
     const loginDto: LoginDto = req.body;
     const { token, user } = await authService.login(loginDto);
-    res.json(ApiResponse.success({ token, user }));
+    
+    // 打印调试信息
+    console.log('生成的Token:', token);
+    console.log('用户数据:', user);
+    
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          balance: user.balance,
+          avatar: user.avatar || ''
+        }
+      }
+    });
   } catch (error) {
+    console.error('登录错误:', error);
     next(error);
   }
 });

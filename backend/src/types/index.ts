@@ -211,6 +211,20 @@ export interface BlindBoxDetail extends BlindBox {
   drawCount?: number;
 }
 
+export interface CreateBlindBoxDto {
+  name: string;
+  description: string;
+  price: number;
+  coverImageUrl: string;
+}
+
+export interface CreateBoxItemDto {
+  name: string;
+  rarity: string;
+  weight: number;
+  coverImageUrl: string;//未完成
+}
+
 /**
  * 用户简略信息
  */

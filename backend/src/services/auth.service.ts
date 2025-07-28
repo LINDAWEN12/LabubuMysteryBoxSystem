@@ -27,23 +27,40 @@ export class AuthService {
     return this.userRepository.save(user);
   }
 
-  async login(loginDto: LoginDto): Promise<{ token: string; user: Omit<User, 'password'> }> {
-    const user = await this.userRepository.findOne({ 
-      where: { username: loginDto.username },
-      select: ['id', 'username', 'password', 'avatar', 'balance']
-    });
-    
-    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-      throw new ApiError(401, 'Invalid credentials');
-    }
+  async login(loginDto: LoginDto) {
+  // 1. 确保查询条件正确
+  const user = await this.userRepository.findOne({
+    where: { username: loginDto.username },
+    select: ['id', 'username', 'password', 'balance', 'avatar']
+  });
 
-    const { password, ...userWithoutPassword } = user;
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '1h' }
-    );
+  console.log('查询到的用户:', user); // 调试日志
 
-    return { token, user: userWithoutPassword };
+  if (!user) {
+    throw new ApiError(401, '用户不存在');
   }
+
+  // 2. 验证密码
+  const isValid = await bcrypt.compare(loginDto.password, user.password);
+  if (!isValid) {
+    throw new ApiError(401, '密码错误');
+  }
+
+  // 3. 生成token
+  const token = jwt.sign(
+    { userId: user.id },
+    process.env.JWT_SECRET || 'your-secret-key',
+    { expiresIn: '1h' }
+  );
+
+  return { 
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      balance: user.balance,
+      avatar: user.avatar
+    }
+  };
+}
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api/auth';
+import api from '../api';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -8,6 +8,7 @@ export default function Login() {
     password: ''
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,12 +20,36 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
     try {
-      const { token } = await login(formData);
-      localStorage.setItem('token', token);
-      navigate('/');
-    } catch (err) {
-      setError(err.message || '登录失败');
+      const response = await api.post('auth/login', formData);
+      
+      if (response?.success) {
+        // 1. 保存token到localStorage
+        localStorage.setItem('token', response.data.token);
+        
+        // 2. 设置axios默认授权头
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        // 3. 跳转到主页 - 使用React Router导航
+       navigate('/home', {
+          replace: true,
+          state: { fromLogin: true } // 添加标记表示来自登录流程
+        });
+        
+        console.log('登录成功，用户数据:', response.data);
+      }
+    } catch (error) {
+      console.error('登录失败:', error);
+      setError(
+        error.response?.data?.error || 
+        error.message || 
+        '登录失败，请检查网络连接'
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -49,6 +74,7 @@ export default function Login() {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -61,14 +87,16 @@ export default function Login() {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
+              disabled={isLoading}
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
+            className="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white py-2 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-70"
+            disabled={isLoading}
           >
-            登录
+            {isLoading ? '登录中...' : '登录'}
           </button>
         </form>
 

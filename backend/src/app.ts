@@ -11,18 +11,39 @@ import { loggerMiddleware } from './middlewares/logger.middleware';
 import { ApiResponse } from './utils/api-response';
 import { setupSwagger } from './utils/swagger'; // 新增导入
 import { Application } from 'express';
+import { createConnection } from 'typeorm';
 class App {
   public app: express.Application;
 
   constructor() {
     this.app = express();
+    this.initializeDatabase();
     this.config();
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
     this.initializeSwagger(); // 新增Swagger初始化
   }
-
+private async initializeDatabase(): Promise<void> {
+    try {
+      await createConnection({
+        name: "default", // 明确指定连接名称
+        type: "mysql",
+        host: "localhost",
+        port: 3306,
+        username: "root",
+        password: "tianru12",
+        database: "blindbox_db",
+        entities: [__dirname + "/entities/*.entity{.ts,.js}"],
+        synchronize: true,
+        logging: true
+      });
+      console.log('数据库连接成功');
+    } catch (error) {
+      console.error('数据库连接失败:', error);
+      process.exit(1); // 连接失败时退出应用
+    }
+  }
   private config(): void {
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use((_, res, next) => {

@@ -17,7 +17,7 @@ export class BlindBox {
   price!: number;
 
   @Column()
-  coverImage!: string;
+  coverImageUrl!: string;
 
   @OneToMany(() => BoxItem, item => item.box)
   items!: BoxItem[];

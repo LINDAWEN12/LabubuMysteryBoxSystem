@@ -7,7 +7,12 @@ import { logger } from '../utils/logger';
 
 const router = Router();
 let blindBoxService: BlindBoxService;
-
+// 在控制器顶部添加响应格式类型
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
 // 添加初始化中间件
 router.use(async (req, res, next) => {
   if (!blindBoxService) {
@@ -42,31 +47,28 @@ router.use(async (req, res, next) => {
  */
 router.get('/', async (req: AuthenticatedRequest, res, next) => {
   try {
-    // 调试日志：打印请求头中的Authorization
-    logger.debug(`请求头Authorization: ${req.headers.authorization}`);
+    const blindBoxes = await blindBoxService.getAll();
     
-    // 验证用户信息
-    if (!req.user) {
-      logger.error('未获取到用户信息，请检查authMiddleware是否执行');
-      throw new ApiError(401, '用户未认证');
+    // 确保返回数组格式
+    if (!Array.isArray(blindBoxes)) {
+      throw new ApiError(500, '获取盲盒数据格式错误');
     }
     
-    logger.debug(`当前用户ID: ${req.user.id}, 用户名: ${req.user.username}`);
-    
-    const blindBoxes = await blindBoxService.getAll();
-    res.json({ 
+    // 统一响应结构
+    const response: ApiResponse<typeof blindBoxes> = {
       success: true,
       data: blindBoxes,
-      currentUser: { // 返回当前用户信息用于调试
-        id: req.user.id,
-        username: req.user.username
-      }
-    });
+      message: '盲盒列表获取成功'
+    };
+    
+    res.json(response);
+    
+    logger.info(`成功返回 ${blindBoxes.length} 个盲盒`);
   } catch (error) {
+    logger.error('获取盲盒列表错误:', error);
     next(error);
   }
 });
-
 /**
  * @swagger
  * /api/blindboxes/{id}:
@@ -100,20 +102,32 @@ router.get('/', async (req: AuthenticatedRequest, res, next) => {
  */
 router.get('/:id', async (req: AuthenticatedRequest, res, next) => {
   try {
-    logger.debug(`获取盲盒详情请求，用户ID: ${req.user?.id}`);
-    
     const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      throw new ApiError(400, '无效的盲盒ID');
+    }
+    
+    logger.debug(`获取盲盒详情请求，用户ID: ${req.user?.id}, 盲盒ID: ${id}`);
+    
     const blindBox = await blindBoxService.getById(id);
-    res.json({ 
+    
+    if (!blindBox) {
+      throw new ApiError(404, '盲盒未找到');
+    }
+    
+    const response: ApiResponse<typeof blindBox> = {
       success: true,
       data: blindBox,
-      requestUser: req.user // 返回请求用户信息
-    });
+      message: '盲盒详情获取成功'
+    };
+    
+    res.json(response);
+    
   } catch (error) {
+    logger.error(`获取盲盒详情错误，ID: ${req.params.id}`, error);
     next(error);
   }
 });
-
 /**
  * @swagger
  * /api/blindboxes/{id}/draw:
@@ -150,33 +164,37 @@ router.get('/:id', async (req: AuthenticatedRequest, res, next) => {
  */
 router.post('/:id/draw', async (req: AuthenticatedRequest, res, next) => {
   try {
-    // 详细验证用户信息
     if (!req.user) {
-      logger.error('抽取盲盒时未获取到用户信息，完整请求头:', req.headers);
+      logger.error('抽取盲盒时未获取到用户信息', {
+        headers: req.headers,
+        ip: req.ip
+      });
       throw new ApiError(401, '用户未认证');
     }
 
-    logger.info(`用户 ${req.user.id} 正在抽取盲盒 ${req.params.id}`);
+    const boxId = parseInt(req.params.id);
+    if (isNaN(boxId)) {
+      throw new ApiError(400, '无效的盲盒ID');
+    }
     
-    const result = await blindBoxService.draw(
-      parseInt(req.params.id),
-      req.user.id
-    );
+    logger.info(`用户 ${req.user.id} 正在抽取盲盒 ${boxId}`);
     
-    logger.debug(`抽取结果: ${JSON.stringify(result)}`);
+    const result = await blindBoxService.draw(boxId, req.user.id);
     
-    res.json({
+    const response: ApiResponse<typeof result> = {
       success: true,
       data: result,
-      drawnBy: { // 返回抽取者信息
-        userId: req.user.id,
-        username: req.user.username
-      }
-    });
+      message: '盲盒抽取成功'
+    };
+    
+    res.json(response);
+    
   } catch (error) {
-    logger.error('抽取盲盒错误:', error);
+    logger.error('抽取盲盒错误:', {
+      userId: req.user?.id,
+      boxId: req.params.id
+    });
     next(error);
   }
 });
-
 export { router as blindboxRouter };

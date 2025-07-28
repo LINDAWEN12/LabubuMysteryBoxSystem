@@ -28,20 +28,45 @@ export const DatabaseConfig: DataSourceOptions = {
 
 export const AppDataSource = new DataSource(DatabaseConfig);
 
+// 安全初始化函数
+let isInitializing = false; // 防止重复初始化
+
 export async function initializeDatabase() {
+  if (AppDataSource.isInitialized) {
+    return AppDataSource;
+  }
+
+  if (isInitializing) {
+    throw new Error("Database initialization already in progress");
+  }
+
   try {
-    if (!AppDataSource.isInitialized) {
-      await AppDataSource.initialize();
-      console.log('✅ Database connected');
+    isInitializing = true;
+    
+    await AppDataSource.initialize();
+    console.log("✅ Database connected");
+
+    if (process.env.NODE_ENV === "development") {
+      await AppDataSource.synchronize();
+      console.log("🔄 Entities synchronized");
       
-      if (process.env.NODE_ENV === 'development') {
-        await AppDataSource.synchronize();
-        console.log('🔄 Entities synchronized');
-      }
+      // 开发环境可选：自动运行迁移
+      // await AppDataSource.runMigrations();
     }
+
     return AppDataSource;
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    process.exit(1);
+    console.error("❌ Database connection failed:", error);
+    
+    // 生产环境需要更优雅的重试机制
+    if (process.env.NODE_ENV === "production") {
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      return initializeDatabase(); // 自动重试
+    } else {
+      process.exit(1);
+    }
+  } finally {
+    isInitializing = false;
   }
+
 }

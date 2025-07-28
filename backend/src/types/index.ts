@@ -215,14 +215,14 @@ export interface CreateBlindBoxDto {
   name: string;
   description: string;
   price: number;
-  coverImageUrl: string;
+  coverImage: string;
 }
 
 export interface CreateBoxItemDto {
   name: string;
   rarity: string;
   weight: number;
-  coverImageUrl: string;//未完成
+  coverImage: string;//未完成
 }
 
 /**

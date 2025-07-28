@@ -12,6 +12,7 @@ import { ApiResponse } from './utils/api-response';
 import { setupSwagger } from './utils/swagger'; // 新增导入
 import { Application } from 'express';
 import { createConnection } from 'typeorm';
+import path from 'path'
 class App {
   public app: express.Application;
 
@@ -72,7 +73,8 @@ private async initializeDatabase(): Promise<void> {
 
     // Public routes
     this.app.use('/api/auth', authRouter);
-
+    this.app.use('/public', express.static(path.join(__dirname, '../public')));
+    
     // Protected routes
     const protectedRouter = express.Router();
     protectedRouter.use(authMiddleware);

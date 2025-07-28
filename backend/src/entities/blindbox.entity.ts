@@ -17,7 +17,7 @@ export class BlindBox {
   price!: number;
 
   @Column()
-  coverImageUrl!: string;
+  coverImage: string = '/images/blindboxes/default.jpg'; // 默认图片路径
 
   @OneToMany(() => BoxItem, item => item.box)
   items!: BoxItem[];

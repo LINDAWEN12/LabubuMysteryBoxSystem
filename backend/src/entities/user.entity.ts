@@ -13,8 +13,8 @@ export class User {
   @Column()
   password!: string;
 
-  @Column({ default: 0 })
-  balance: number = 0;
+  @Column({ default: 1000 })
+  balance: number = 1000;
 
   @Column({ default: '' })
   avatar: string = '';

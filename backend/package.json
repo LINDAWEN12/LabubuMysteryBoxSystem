@@ -7,7 +7,8 @@
     "start": "ts-node src/app.ts",
     "build": "tsc",
     "dev": "nodemon src/app.ts",
-    "test": "jest"
+    "test": "jest",
+    "init-data": "ts-node src/init-data.ts"
   },
   "dependencies": {
     "@types/multer": "^2.0.0",
@@ -24,6 +25,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.12",
+  
     "winston": "^3.17.0"
   },
   "devDependencies": {

@@ -6,7 +6,7 @@ export class ShowcaseService {
 
   // 添加静态初始化方法
   static async createInstance() {
-    await AppDataSource.initialize();
+    //await AppDataSource.initialize();
     return new ShowcaseService();
   }
 

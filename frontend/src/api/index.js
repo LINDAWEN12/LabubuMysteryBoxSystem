@@ -34,6 +34,7 @@ api.interceptors.response.use(
       success: true,
       status: response.status,
       data: response.data.data ?? response.data, // 兼容不同后端格式
+      message: response.data.message,
       headers: response.headers
     };
   },

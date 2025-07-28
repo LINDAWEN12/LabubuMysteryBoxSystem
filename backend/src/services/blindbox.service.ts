@@ -16,12 +16,29 @@ export class BlindBoxService {
       throw new Error('数据库未初始化！请先调用 AppDataSource.initialize()');
     }
   }
-  async getAll(): Promise<BlindBox[]> {
-    return this.blindBoxRepository.find({ 
-      relations: ['items'] 
+async getAll(): Promise<BlindBox[]> {
+  try {
+    const blindBoxes = await this.blindBoxRepository.find({ 
+      relations: ['items'],
+      order: { id: 'ASC' }
     });
+    
+    if (!blindBoxes || !Array.isArray(blindBoxes)) {
+      throw new Error('查询结果不是数组');
+    }
+    
+    // 转换数据格式，确保coverImage有完整URL
+    return blindBoxes.map(box => ({
+      ...box,
+      coverImage: box.coverImage.startsWith('http') ? 
+        box.coverImage : 
+        `${process.env.API_BASE_URL || 'http://localhost:3001'}${box.coverImage}`
+    }));
+    
+  } catch (error) {
+    throw new ApiError(500, '获取盲盒数据失败');
   }
-
+}
   async getById(id: number): Promise<BlindBox> {
     const blindBox = await this.blindBoxRepository.findOne({ 
       where: { id },

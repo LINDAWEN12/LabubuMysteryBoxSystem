@@ -27,6 +27,18 @@ async function initializeData() {
         ]
       },
       // 其他盲盒数据...
+       {
+        name: '秋日限定系列',
+        description: '充满夏日风情的限定盲盒',
+        price: 99.99,
+        coverImage: '/images/box2.jpg',
+        items: [
+          { name: '海豚', rarity: 'rare', weight: 20, image: '/images/pop4.jpg' },
+          { name: '排球', rarity: 'common', weight: 40, image: '/images/pop5.jpg' },
+          { name: '镜', rarity: 'common', weight: 40, image: '/images/pop6.jpg' },
+        
+        ]
+      },
     ];
 
     // 保存盲盒数据

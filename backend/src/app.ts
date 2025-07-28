@@ -74,7 +74,7 @@ private async initializeDatabase(): Promise<void> {
     // Public routes
     this.app.use('/api/auth', authRouter);
     this.app.use('/public', express.static(path.join(__dirname, '../public')));
-    
+    this.app.use('/images', express.static(path.join(__dirname, '../public/images')));
     // Protected routes
     const protectedRouter = express.Router();
     protectedRouter.use(authMiddleware);

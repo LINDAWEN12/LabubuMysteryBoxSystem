@@ -16,7 +16,7 @@ export class BoxItem {
   weight!: number; // 抽中权重
 
   @Column()
-  image: string = '/images/box-items/default.png'; // 默认物品图片路径
+  image: string = '/images/box-items/default.jpg'; // 默认物品图片路径
 
   @ManyToOne(() => BlindBox, box => box.items)
   box!: BlindBox;

@@ -179,19 +179,27 @@ router.use(async (req, res, next) => {
   next();
 });
 
-// 获取所有玩家秀
+// 确保返回的图片路径是完整的URL或正确的相对路径
 router.get('/', async (req, res, next) => {
   try {
     const showcases = await showcaseService.getAll();
+    
+    // 处理图片路径
+    const processedShowcases = showcases.map(showcase => ({
+      ...showcase,
+      image: showcase.image.startsWith('http') ? 
+             showcase.image : 
+             `/uploads/showcases/${showcase.image}`
+    }));
+    
     res.json({
       success: true,
-      data: showcases
+      data: processedShowcases
     });
   } catch (error) {
     next(error);
   }
 });
-
 // 创建玩家秀
 router.post('/', async (req: AuthenticatedRequest, res, next) => {
   try {

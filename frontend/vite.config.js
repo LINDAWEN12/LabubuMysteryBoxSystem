@@ -9,9 +9,10 @@ export default defineConfig({
     // 新增代理配置（对接后端API）
     proxy: {
       '/api': {
-        target: 'http://localhost:3001', // 确保与后端端口一致
+        target: 'http://localhost:3001',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api') // 保持/api前缀
       }
     },
     // 启用热更新

@@ -56,7 +56,8 @@ private async initializeDatabase(): Promise<void> {
   private initializeMiddlewares(): void {
     this.app.use(cors({
       origin: ['http://localhost:3000'],
-      credentials: true
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE']
     }));
     this.app.use(express.json());
     this.app.use(loggerMiddleware);
@@ -80,7 +81,7 @@ private async initializeDatabase(): Promise<void> {
     protectedRouter.use(authMiddleware);
     protectedRouter.use('/blindboxes', blindboxRouter);
     protectedRouter.use('/orders', orderRouter);
-    protectedRouter.use('/showcases', showcaseRouter);
+    this.app.use('/api/showcases', showcaseRouter);
     this.app.use('/api', protectedRouter);
   }
 

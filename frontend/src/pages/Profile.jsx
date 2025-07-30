@@ -1,33 +1,59 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProfile } from '../api/auth';
+import api from '../api';
+import { getProfile, updateAvatar } from '../api/auth';
 import { getOrders } from '../api/orders';
+
+// 使用import.meta.env获取环境变量（Vite）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
+// 统一图片URL处理（与您的习惯保持一致）
+const formatImageUrl = (path, defaultPath = '/images/default.jpg') => {
+  if (!path) return `${API_BASE_URL}${defaultPath}`;
+  return path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+};
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('collection');
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profileData, ordersData] = await Promise.all([
+        const [profileResponse, ordersResponse] = await Promise.all([
           getProfile(),
           getOrders()
         ]);
         
-        setUser(profileData);
-        setOrders(ordersData);
+        // 处理用户数据
+        const userData = profileResponse.data?.data || profileResponse.data;
+        setUser({
+          ...userData,
+          avatar: userData.avatar ? formatImageUrl(userData.avatar, '/images/default-avatar.jpg') : ''
+        });
         
-        // 模拟心愿单数据
-        setWishlist([
-          { id: 1, name: '甜心动物系列' },
-          { id: 2, name: '魔法少女系列' },
-          { id: 3, name: '梦幻独角兽' }
-        ]);
+        if (userData.avatar) {
+          setAvatarPreview(formatImageUrl(userData.avatar, '/images/default-avatar.jpg'));
+        }
+
+        // 处理订单数据
+        const ordersData = ordersResponse.data?.data || ordersResponse.data;
+        setOrders(Array.isArray(ordersData) ? ordersData.map(order => ({
+          ...order,
+          box: order.box ? {
+            ...order.box,
+            coverImage: formatImageUrl(order.box.coverImage, '/images/default-box.jpg')
+          } : null,
+          item: order.item ? {
+            ...order.item,
+            image: formatImageUrl(order.item.image, '/images/default-item.jpg')
+          } : null
+        })) : []);
+        
       } catch (error) {
         console.error('获取数据失败:', error);
       } finally {
@@ -37,6 +63,39 @@ export default function Profile() {
     
     fetchData();
   }, []);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!avatarFile) return;
+    
+    try {
+      const formData = new FormData();
+      formData.append('avatar', avatarFile);
+      
+      const response = await updateAvatar(formData);
+      const updatedUser = response.data?.data || response.data;
+      
+      setUser({
+        ...updatedUser,
+        avatar: formatImageUrl(updatedUser.avatar, '/images/default-avatar.jpg')
+      });
+      setAvatarPreview(formatImageUrl(updatedUser.avatar, '/images/default-avatar.jpg'));
+      setAvatarFile(null);
+    } catch (error) {
+      console.error('头像上传失败:', error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -64,177 +123,118 @@ export default function Profile() {
     <div className="pb-16">
       <div className="bg-gradient-to-r from-pink-400 to-purple-500 p-6 pt-12 rounded-b-3xl text-white">
         <div className="flex items-center">
-          <div className="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-3xl mr-4">
-            {user.username?.charAt(0) || '👤'}
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center overflow-hidden mr-4">
+              {avatarPreview ? (
+                <img 
+                  src={avatarPreview} 
+                  alt="用户头像" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-3xl">
+                  {user.username?.charAt(0)?.toUpperCase() || '👤'}
+                </span>
+              )}
+            </div>
+            <label 
+              htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 bg-white rounded-full w-6 h-6 flex items-center justify-center text-xs cursor-pointer"
+            >
+              ✏️
+            </label>
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
           </div>
           <div>
             <h1 className="text-xl font-bold">{user.username}</h1>
             <p className="text-sm opacity-80">
-              {user.balance ? `余额: ¥${user.balance.toFixed(2)}` : '新用户'}
+              余额: ¥{user.balance?.toFixed(2) || '0.00'}
             </p>
           </div>
         </div>
       </div>
 
       <div className="p-4">
-        <div className="bg-white rounded-2xl shadow-md p-4 -mt-8 mb-6">
-          <div className="grid grid-cols-3 divide-x divide-gray-200 text-center py-2">
-            <StatItem 
-              value={orders.length} 
-              label="已收集" 
-            />
-            <StatItem 
-              value={wishlist.length} 
-              label="心愿单" 
-            />
-            <StatItem 
-              value={new Date(user.createdAt).toLocaleDateString()} 
-              label="加入日期" 
-            />
-          </div>
-        </div>
-
-        <div className="flex border-b border-gray-200 mb-4">
-          <TabButton 
-            active={activeTab === 'collection'}
-            onClick={() => setActiveTab('collection')}
-          >
-            我的收藏
-          </TabButton>
-          <TabButton 
-            active={activeTab === 'wishlist'}
-            onClick={() => setActiveTab('wishlist')}
-          >
-            心愿单
-          </TabButton>
-          <TabButton 
-            active={activeTab === 'settings'}
-            onClick={() => setActiveTab('settings')}
-          >
-            设置
-          </TabButton>
-        </div>
-
-        {activeTab === 'collection' && (
-          <div className="space-y-4">
-            {orders.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                您还没有任何收藏
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {orders.map(order => (
-                  <div 
-                    key={order.id} 
-                    className="bg-pink-50 rounded-lg p-3 flex flex-col items-center"
-                  >
-                    <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center text-2xl mb-2">
-                      🎁
-                    </div>
-                    <p className="font-medium text-sm text-center">
-                      {order.item?.name || '未知物品'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'wishlist' && (
-          <div className="space-y-3">
-            {wishlist.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                您的心愿单是空的
-              </div>
-            ) : (
-              wishlist.map(item => (
-                <div 
-                  key={item.id} 
-                  className="bg-purple-50 p-3 rounded-lg flex justify-between items-center"
-                >
-                  <span className="font-medium">{item.name}</span>
-                  <button 
-                    className="text-pink-500 text-sm"
-                    onClick={() => navigate('/mystery-box')}
-                  >
-                    去抽取
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'settings' && (
-          <div className="space-y-4">
-            <SettingItem 
-              icon="⚙️" 
-              title="账户设置" 
-              onClick={() => console.log('账户设置')}
-            />
-            <SettingItem 
-              icon="🔔" 
-              title="通知设置" 
-              onClick={() => console.log('通知设置')}
-            />
-            <SettingItem 
-              icon="🛡️" 
-              title="隐私设置" 
-              onClick={() => console.log('隐私设置')}
-            />
-            <SettingItem 
-              icon="❓" 
-              title="帮助中心" 
-              onClick={() => console.log('帮助中心')}
-            />
-            <button 
-              className="w-full text-red-500 py-3 border-t border-gray-200 mt-4 text-left"
-              onClick={handleLogout}
+        {avatarFile && (
+          <div className="mb-4 flex items-center justify-between bg-white p-3 rounded-lg shadow">
+            <span className="text-sm">新头像已选择</span>
+            <button
+              onClick={handleAvatarUpload}
+              className="bg-pink-500 text-white px-3 py-1 rounded text-sm"
             >
-              退出登录
+              上传头像
             </button>
           </div>
         )}
+
+        <div className="mb-6">
+          <h2 className="text-lg font-bold mb-3">订单历史</h2>
+          
+          {orders.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              您还没有任何订单记录
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {orders.map(order => (
+                <div 
+                  key={order.id} 
+                  className="bg-white rounded-lg shadow-sm p-4"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-medium">订单 #{order.id}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(order.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <span className="font-bold text-pink-600">
+                      ¥{order.price?.toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center mt-3 pt-3 border-t border-gray-100">
+                    <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mr-3 overflow-hidden">
+                      <img 
+                        src={order.item?.image || `${API_BASE_URL}/images/default-item.jpg`} 
+                        alt={order.item?.name || '未知物品'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{order.item?.name || '未知物品'}</p>
+                      <p className="text-xs text-gray-500">
+                        来自: {order.box?.name || '未知盲盒'}
+                      </p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      order.item?.rarity === 'rare' ? 'bg-blue-100 text-blue-800' :
+                      order.item?.rarity === 'epic' ? 'bg-purple-100 text-purple-800' :
+                      order.item?.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {order.item?.rarity || '普通'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button 
+          className="w-full bg-gray-100 text-gray-800 py-3 rounded-lg text-center mt-6"
+          onClick={handleLogout}
+        >
+          退出登录
+        </button>
       </div>
     </div>
-  );
-}
-
-function StatItem({ value, label }) {
-  return (
-    <div className="px-2">
-      <p className="font-bold text-lg text-purple-800">{value}</p>
-      <p className="text-xs text-gray-500">{label}</p>
-    </div>
-  );
-}
-
-function TabButton({ children, active, onClick }) {
-  return (
-    <button 
-      onClick={onClick}
-      className={`flex-1 py-2 font-medium text-sm ${
-        active ? 'text-pink-600 border-b-2 border-pink-600' : 'text-gray-500'
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function SettingItem({ icon, title, onClick }) {
-  return (
-    <button 
-      className="flex items-center p-3 bg-white rounded-lg shadow-sm w-full text-left"
-      onClick={onClick}
-    >
-      <span className="text-xl mr-3">{icon}</span>
-      <span className="flex-1">{title}</span>
-      <span>›</span>
-    </button>
   );
 }

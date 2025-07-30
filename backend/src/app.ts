@@ -13,6 +13,8 @@ import { setupSwagger } from './utils/swagger'; // 新增导入
 import { Application } from 'express';
 import { createConnection } from 'typeorm';
 import path from 'path'
+import { AuthenticatedRequest } from './types/custom-request';
+
 class App {
   public app: express.Application;
 
@@ -82,6 +84,18 @@ private async initializeDatabase(): Promise<void> {
     protectedRouter.use(authMiddleware);
     protectedRouter.use('/blindboxes', blindboxRouter);
     protectedRouter.use('/orders', orderRouter);
+    // 添加用户资料路由
+    protectedRouter.get('/profile', (req: AuthenticatedRequest, res) => {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }// 现在可以安全访问 req.user 的所有属性
+      res.json({
+        id: req.user.id,
+        username: req.user.username,
+        balance: req.user.balance, // 可以访问 balance
+        avatar: req.user.avatar    // 可以访问 avatar
+      });
+    });
     this.app.use('/api/showcases', showcaseRouter);
     this.app.use('/api', protectedRouter);
   }

@@ -36,8 +36,12 @@ export default function MysteryBox() {
   }, []);
 
   const handleDraw = (id) => {
-    navigate(`/draw/${id}`);
-  };
+  navigate(`/draw/${id}`);
+};
+
+const handleViewDetail = (id) => {
+  navigate(`/blindbox/${id}`);
+};
 
   if (loading) {
     return (
@@ -86,7 +90,7 @@ export default function MysteryBox() {
       ) : (
         <div className="grid grid-cols-2 gap-4">
           {boxes.map(box => (
-            <BoxCard key={box.id} box={box} onDraw={handleDraw} />
+            <BoxCard key={box.id} box={box} onDraw={handleDraw} onViewDetail={handleViewDetail} />
           ))}
         </div>
       )}
@@ -94,9 +98,9 @@ export default function MysteryBox() {
   );
 }
 
-function BoxCard({ box, onDraw }) {
+function BoxCard({ box, onDraw, onViewDetail }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all">
+    <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all cursor-pointer" onClick={() => onViewDetail(box.id)}>
       {/* 使用实际封面图片 */}
       <div 
         className="h-32 bg-cover bg-center"
@@ -108,7 +112,7 @@ function BoxCard({ box, onDraw }) {
         <div className="flex justify-between items-center mt-3">
           <span className="text-purple-700 font-bold">¥{box.price.toFixed(2)}</span>
           <button 
-            onClick={() => onDraw(box.id)}
+            onClick={(e) => { e.stopPropagation(); onDraw(box.id); }}
             className="bg-gradient-to-r from-pink-400 to-purple-500 text-white px-4 py-1 rounded-full text-sm hover:from-pink-500 hover:to-purple-600 transition"
           >
             抽取

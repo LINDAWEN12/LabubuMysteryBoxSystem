@@ -65,3 +65,13 @@ export const createShowcase = async (formData) => {
     throw error;
   }
 };
+
+export const deleteShowcase = async (id) => {
+  try {
+    const response = await api.delete(`/showcases/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('删除玩家秀失败:', error);
+    throw error;
+  }
+};

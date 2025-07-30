@@ -19,8 +19,8 @@ export class Showcase {
   @ManyToOne(() => User, user => user.showcases)
   user!: User;
 
-  @ManyToOne(() => BoxItem)
-  item!: BoxItem;
+  @ManyToOne(() => BoxItem, { nullable: true })
+  item?: BoxItem;
 
   constructor(init?: Partial<Showcase>) {
     if (init) {

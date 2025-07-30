@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { getShowcases, createShowcase } from '../api/showcases';
+import { getShowcases, createShowcase, deleteShowcase } from '../api/showcases';
 import './Community.css';
 
 function Community() {
@@ -66,7 +66,9 @@ function Community() {
       const formData = new FormData();
       formData.append('image', uploadData.image);
       formData.append('comment', uploadData.comment);
-      formData.append('itemId', uploadData.itemId);
+      if (uploadData.itemId.trim()) {
+  formData.append('itemId', uploadData.itemId);
+}
 
       const newShowcase = await createShowcase(formData);
       
@@ -83,6 +85,21 @@ function Community() {
       setError(err.message || '上传失败，请稍后重试');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDelete = async (postId) => {
+    if (window.confirm('确定要删除这条展示吗？')) {
+      try {
+      await deleteShowcase(postId);
+      setPosts(posts.filter(post => post.id !== postId));
+    } catch (err) {
+      console.error('Error deleting showcase:', err);
+      // 显示具体错误信息，不跳转登录页
+      setError(err.response?.data?.message || '删除失败：' + (err.message || '无权操作或服务器错误'));
+      // 3秒后自动清除错误提示
+      setTimeout(() => setError(''), 3000);
+    }
     }
   };
 
@@ -205,6 +222,12 @@ function Community() {
                       {new Date(post.createdAt).toLocaleString()}
                     </span>
                   </div>
+                  <button 
+                    className="delete-button"
+                    onClick={() => handleDelete(post.id)}
+                  >
+                    删除
+                  </button>
                 </div>
                 
                 <p className="post-comment">{post.comment}</p>

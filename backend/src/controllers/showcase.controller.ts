@@ -189,7 +189,7 @@ router.get('/', async (req, res, next) => {
     // 处理图片路径
     const processedShowcases = showcases.map(showcase => ({
       ...showcase,
-      image: showcase.image.startsWith('http') ? 
+      image: showcase.image.startsWith('http') || showcase.image.startsWith('/uploads/') ? 
              showcase.image : 
              `/uploads/showcases/${showcase.image}`
     }));
@@ -214,13 +214,13 @@ router.post(
       }
 
       const { comment, itemId } = req.body;
-      if (!req.user) throw new ApiError(401, '请先登录');
+      if (!req.user) throw new ApiError(403, '请先登录');
       // 现在 TypeScript 知道 req.user 一定存在（因为经过了 authMiddleware）
       const showcase = await showcaseService.create({
         image: `/uploads/${req.file.filename}`,
         comment,
         itemId,
-        userId: req.user.id
+        user: { id: req.user.id }
       });
 
       res.json(showcase);
@@ -230,9 +230,9 @@ router.post(
   }
 );
 // 删除玩家秀
-router.delete('/:id', async (req: AuthenticatedRequest, res, next) => {
+router.delete('/:id', authMiddleware, async (req: AuthenticatedRequest, res, next) => {
   try {
-    if (!req.user) throw new ApiError(401, '请先登录');
+    if (!req.user) throw new ApiError(403, '请先登录');
     
     const success = await showcaseService.delete(
       parseInt(req.params.id),

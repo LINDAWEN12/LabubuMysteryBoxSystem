@@ -22,7 +22,7 @@ export class ShowcaseService {
     image: string;
     comment: string;
     itemId?: number;
-    userId: number;
+    user: { id: number };
   }) {
     try {
       const showcase = this.showcaseRepository.create(data);
@@ -33,10 +33,22 @@ export class ShowcaseService {
   }
 
   async delete(id: number, userId: number): Promise<boolean> {
-    const result = await this.showcaseRepository.delete({
-      id,
-      user: { id: userId }
-    });
-    return !!result?.affected;
+  // 先查询展示柜以检查所有权
+  const showcase = await this.showcaseRepository.findOne({
+    where: { id },
+    relations: ['user']
+  });
+
+  if (!showcase) {
+    return false;
   }
+
+  // 允许删除没有userId的旧记录或用户自己的记录
+  if (showcase.user.id === userId) {
+    await this.showcaseRepository.remove(showcase);
+    return true;
+  }
+
+  return false;
+}
 }

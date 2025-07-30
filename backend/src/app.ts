@@ -14,6 +14,7 @@ import { Application } from 'express';
 import { createConnection } from 'typeorm';
 import path from 'path'
 import { AuthenticatedRequest } from './types/custom-request';
+import { userRouter } from './controllers/user.controller';
 
 class App {
   public app: express.Application;
@@ -97,6 +98,7 @@ private async initializeDatabase(): Promise<void> {
       });
     });
     this.app.use('/api/showcases', showcaseRouter);
+    this.app.use('/api/auth', userRouter);
     this.app.use('/api', protectedRouter);
   }
 

@@ -7,4 +7,5 @@ export interface AuthenticatedRequest extends Request {
      balance?: number;  // 添加balance
      avatar?: string;  // 可选头像字段
   };
+   file?: Express.Multer.File;
 }

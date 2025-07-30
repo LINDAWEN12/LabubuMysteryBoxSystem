@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { ShowcaseService } from '../services/showcase.service';
 import { AuthenticatedRequest } from '../types/custom-request';
 import { ApiError } from '../utils/api-error';
+import { authMiddleware } from '../middlewares/auth.middleware';
+import { upload } from '../utils/fileUpload';
 
 const router = Router();
 let showcaseService: ShowcaseService;
@@ -201,24 +203,32 @@ router.get('/', async (req, res, next) => {
   }
 });
 // 创建玩家秀
-router.post('/', async (req: AuthenticatedRequest, res, next) => {
-  try {
-    if (!req.user) throw new ApiError(401, '请先登录');
-    
-    const showcase = await showcaseService.create({
-      ...req.body,
-      userId: req.user.id
-    });
-    
-    res.status(201).json({
-      success: true,
-      data: showcase
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post(
+  '/',
+  authMiddleware, // 先验证身份
+  upload.single('image'), // 处理文件上传
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      if (!req.file) {
+        throw new ApiError(400, '请上传图片');
+      }
 
+      const { comment, itemId } = req.body;
+      if (!req.user) throw new ApiError(401, '请先登录');
+      // 现在 TypeScript 知道 req.user 一定存在（因为经过了 authMiddleware）
+      const showcase = await showcaseService.create({
+        image: `/uploads/${req.file.filename}`,
+        comment,
+        itemId,
+        userId: req.user.id
+      });
+
+      res.json(showcase);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 // 删除玩家秀
 router.delete('/:id', async (req: AuthenticatedRequest, res, next) => {
   try {

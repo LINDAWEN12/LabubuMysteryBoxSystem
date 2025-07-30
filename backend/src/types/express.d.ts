@@ -7,6 +7,7 @@ declare global {
         id: number;
         username: string;
       };
+       file?: Express.Multer.File;
     }
 
     interface Response {

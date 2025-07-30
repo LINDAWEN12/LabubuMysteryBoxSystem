@@ -1,9 +1,8 @@
 import api from "./index";
 
-// 使用与blindbox相同的环境变量配置
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
-// 统一图片URL处理（与blindbox一致）
+// 统一图片URL处理
 const formatImageUrl = (path, defaultPath = '/images/default-showcase.jpg') => {
   if (!path) return `${API_BASE_URL}${defaultPath}`;
   return path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
@@ -24,11 +23,11 @@ export const getShowcases = async () => {
     
     return showcasesArray.map(showcase => ({
       id: showcase.id,
-      image: formatImageUrl(showcase.image), // 关键修改点
+      image: formatImageUrl(showcase.image),
       comment: showcase.comment || '',
       userId: showcase.userId,
       itemId: showcase.itemId,
-      createdAt: showcase.createdAt
+      createdAt: showcase.createdAt || new Date().toISOString()
     }));
     
   } catch (error) {
@@ -37,9 +36,13 @@ export const getShowcases = async () => {
   }
 };
 
-export const createShowcase = async (data) => {
+export const createShowcase = async (formData) => {
   try {
-    const response = await api.post('/showcases', data);
+    const response = await api.post('/showcases', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     console.log('创建API响应:', response);
     
     const showcaseData = response.data?.data || response.data;
@@ -50,10 +53,11 @@ export const createShowcase = async (data) => {
     
     return {
       id: showcaseData.id,
-      image: formatImageUrl(showcaseData.image), // 关键修改点
+      image: formatImageUrl(showcaseData.image),
       comment: showcaseData.comment || '',
       userId: showcaseData.userId,
-      itemId: showcaseData.itemId
+      itemId: showcaseData.itemId,
+      createdAt: showcaseData.createdAt || new Date().toISOString()
     };
     
   } catch (error) {

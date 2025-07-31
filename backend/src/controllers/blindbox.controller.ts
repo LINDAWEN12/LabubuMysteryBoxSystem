@@ -1,3 +1,7 @@
+/**
+ * 盲盒控制器
+ * 处理盲盒相关的HTTP请求，包括获取盲盒列表、详情和抽取盲盒等功能
+ */
 import { Router } from 'express';
 import { BlindBoxService } from '../services/blindbox.service';
 import { AuthenticatedRequest } from '../types/custom-request';
@@ -7,13 +11,22 @@ import { logger } from '../utils/logger';
 
 const router = Router();
 let blindBoxService: BlindBoxService;
-// 在控制器顶部添加响应格式类型
+
+/**
+ * API响应格式接口
+ * 用于标准化API响应结构
+ * @template T - 响应数据的类型
+ */
 interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
+  success: boolean;     // 操作是否成功
+  data?: T;             // 响应数据
+  message?: string;     // 响应消息
 }
-// 添加初始化中间件
+
+/**
+ * 初始化中间件
+ * 确保BlindBoxService实例被正确初始化
+ */
 router.use(async (req, res, next) => {
   if (!blindBoxService) {
     blindBoxService = new BlindBoxService();
@@ -24,13 +37,13 @@ router.use(async (req, res, next) => {
 /**
  * @swagger
  * /api/blindboxes:
- *   get:
+ *   get: 
  *     summary: 获取所有盲盒列表
  *     tags: [盲盒]
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200:
+ *       200: 
  *         description: 盲盒列表
  *         content:
  *           application/json:
@@ -44,6 +57,13 @@ router.use(async (req, res, next) => {
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/BlindBox'
+ */
+/**
+ * 获取所有盲盒列表
+ * @param req - 经过认证的请求对象
+ * @param res - 响应对象
+ * @param next - 下一步函数
+ * @returns {Promise<void>} - 返回Promise
  */
 router.get('/', async (req: AuthenticatedRequest, res, next) => {
   try {
@@ -69,6 +89,7 @@ router.get('/', async (req: AuthenticatedRequest, res, next) => {
     next(error);
   }
 });
+
 /**
  * @swagger
  * /api/blindboxes/{id}:
@@ -100,6 +121,13 @@ router.get('/', async (req: AuthenticatedRequest, res, next) => {
  *       404:
  *         description: 盲盒未找到
  */
+/**
+ * 获取盲盒详情
+ * @param req - 经过认证的请求对象
+ * @param res - 响应对象
+ * @param next - 下一步函数
+ * @returns {Promise<void>} - 返回Promise
+ */
 router.get('/:id', async (req: AuthenticatedRequest, res, next) => {
   try {
     const id = parseInt(req.params.id);
@@ -128,6 +156,7 @@ router.get('/:id', async (req: AuthenticatedRequest, res, next) => {
     next(error);
   }
 });
+
 /**
  * @swagger
  * /api/blindboxes/{id}/draw:
@@ -161,6 +190,13 @@ router.get('/:id', async (req: AuthenticatedRequest, res, next) => {
  *                       $ref: '#/components/schemas/BoxItem'
  *                     order:
  *                       $ref: '#/components/schemas/Order'
+ */
+/**
+ * 抽取盲盒
+ * @param req - 经过认证的请求对象
+ * @param res - 响应对象
+ * @param next - 下一步函数
+ * @returns {Promise<void>} - 返回Promise
  */
 router.post('/:id/draw', async (req: AuthenticatedRequest, res, next) => {
   try {
@@ -197,4 +233,5 @@ router.post('/:id/draw', async (req: AuthenticatedRequest, res, next) => {
     next(error);
   }
 });
+
 export { router as blindboxRouter };

@@ -1,26 +1,44 @@
+/**
+ * 玩家社区页面组件
+ * 展示玩家分享的盲盒图片和评论，支持上传和删除功能
+ */
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getShowcases, createShowcase, deleteShowcase } from '../api/showcases';
 import './Community.css';
 
+/**
+ * 社区页面组件
+ * @returns {JSX.Element} 社区页面渲染结果
+ */
 function Community() {
+  // 玩家秀列表状态
   const [posts, setPosts] = useState([]);
+  // 加载状态
   const [loading, setLoading] = useState(true);
+  // 错误信息状态
   const [error, setError] = useState(null);
+  // 上传模态框显示状态
   const [showUploadModal, setShowUploadModal] = useState(false);
+  // 上传数据状态
   const [uploadData, setUploadData] = useState({
     image: null,
     comment: '',
     itemId: '',
     previewImage: null
   });
+  // 上传中状态
   const [uploading, setUploading] = useState(false);
 
-  // 获取玩家秀列表
+  /**
+   * 获取玩家秀列表
+   * 使用useEffect在组件挂载时执行
+   */
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
+        // 调用API获取玩家秀数据
         const data = await getShowcases();
         setPosts(data);
       } catch (err) {
@@ -33,9 +51,12 @@ function Community() {
     };
 
     fetchPosts();
-  }, []);
+  }, []); // 空依赖数组表示只在组件挂载时执行一次
 
-  // 处理图片选择
+  /**
+   * 处理图片选择
+   * @param {Event} e - 文件选择事件
+   */
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -51,7 +72,11 @@ function Community() {
     }
   };
 
-  // 提交上传表单
+  /**
+   * 提交上传表单
+   * @param {Event} e - 表单提交事件
+   * @returns {Promise<void>} - 返回Promise
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!uploadData.image) {
@@ -63,17 +88,22 @@ function Community() {
       setUploading(true);
       setError(null);
       
+      // 准备表单数据
       const formData = new FormData();
       formData.append('image', uploadData.image);
       formData.append('comment', uploadData.comment);
       if (uploadData.itemId.trim()) {
-  formData.append('itemId', uploadData.itemId);
-}
+        formData.append('itemId', uploadData.itemId);
+      }
 
+      // 调用API创建新玩家秀
       const newShowcase = await createShowcase(formData);
       
+      // 更新玩家秀列表（添加到开头）
       setPosts([newShowcase, ...posts]);
+      // 关闭模态框
       setShowUploadModal(false);
+      // 重置上传表单
       setUploadData({
         image: null,
         comment: '',
@@ -88,21 +118,29 @@ function Community() {
     }
   };
 
+  /**
+   * 删除玩家秀
+   * @param {number|string} postId - 玩家秀ID
+   * @returns {Promise<void>} - 返回Promise
+   */
   const handleDelete = async (postId) => {
     if (window.confirm('确定要删除这条展示吗？')) {
       try {
-      await deleteShowcase(postId);
-      setPosts(posts.filter(post => post.id !== postId));
-    } catch (err) {
-      console.error('Error deleting showcase:', err);
-      // 显示具体错误信息，不跳转登录页
-      setError(err.response?.data?.message || '删除失败：' + (err.message || '无权操作或服务器错误'));
-      // 3秒后自动清除错误提示
-      setTimeout(() => setError(''), 3000);
-    }
+        // 调用API删除玩家秀
+        await deleteShowcase(postId);
+        // 更新玩家秀列表（过滤掉已删除项）
+        setPosts(posts.filter(post => post.id !== postId));
+      } catch (err) {
+        console.error('Error deleting showcase:', err);
+        // 显示具体错误信息
+        setError(err.response?.data?.message || '删除失败：' + (err.message || '无权操作或服务器错误'));
+        // 3秒后自动清除错误提示
+        setTimeout(() => setError(''), 3000);
+      }
     }
   };
 
+  // 加载中状态渲染
   if (loading) {
     return (
       <div className="loading-container">
@@ -112,6 +150,7 @@ function Community() {
     );
   }
 
+  // 错误状态且没有数据时渲染
   if (error && posts.length === 0) {
     return (
       <div className="error-container">
@@ -121,6 +160,7 @@ function Community() {
     );
   }
 
+  // 主组件渲染
   return (
     <div className="community-page">
       {/* 上传模态框 */}

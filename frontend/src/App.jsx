@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import BlindBoxDetail from './pages/BlindBoxDetail';
+import DrawPage from './pages/DrawPage';
 // 创建带有导航栏的布局组件
 const LayoutWithNavbar = () => {
   return (
@@ -35,6 +36,7 @@ function App() {
             <Route path="/blindbox/:id" element={<BlindBoxDetail />} />
             <Route path="/community" element={<Community />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/draw/:id" element={<DrawPage />} />
           </Route>
         </Route>
       </Routes>

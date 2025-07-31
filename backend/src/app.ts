@@ -15,6 +15,7 @@ import { createConnection } from 'typeorm';
 import path from 'path'
 import { AuthenticatedRequest } from './types/custom-request';
 import { userRouter } from './controllers/user.controller';
+import { drawRouter } from './controllers/draw.controller';
 
 class App {
   public app: express.Application;
@@ -80,6 +81,8 @@ private async initializeDatabase(): Promise<void> {
     this.app.use('/public', express.static(path.join(__dirname, '../public')));
     this.app.use('/images', express.static(path.join(__dirname, '../public/images')));
     this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+    this.app.use('/api/draw', drawRouter);
     // Protected routes
     const protectedRouter = express.Router();
     protectedRouter.use(authMiddleware);

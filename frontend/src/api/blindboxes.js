@@ -68,3 +68,22 @@ export const getBlindBoxById = async (id) => {
     throw error;
   }
 };
+
+export const drawBlindBox = async (boxId) => {
+  try {
+    const response = await api.post(`/blindboxes/${boxId}/draw`);
+    
+    return response.data.data;
+  } catch (error) {
+    console.error('抽奖API错误:', error);
+    
+    // 处理特定错误状态码
+    if (error.response?.status === 400) {
+      throw new Error('余额不足，请充值');
+    } else if (error.response?.status === 404) {
+      throw new Error('盲盒不存在');
+    } else {
+      throw new Error(error.response?.data?.message || '抽奖失败，请重试');
+    }
+  }
+};

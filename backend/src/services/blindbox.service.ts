@@ -10,12 +10,6 @@ export class BlindBoxService {
   private userRepository = AppDataSource.getRepository(User);
   private orderRepository = AppDataSource.getRepository(Order);
 
-  // 添加静态初始化方法
-  constructor() {
-    if (!AppDataSource.isInitialized) {
-      throw new Error('数据库未初始化！请先调用 AppDataSource.initialize()');
-    }
-  }
 async getAll(): Promise<BlindBox[]> {
   try {
     const blindBoxes = await this.blindBoxRepository.find({ 
@@ -53,27 +47,39 @@ async getAll(): Promise<BlindBox[]> {
   }
 
   async draw(boxId: number, userId: number): Promise<{ item: BoxItem; order: Order }> {
-    const box = await this.blindBoxRepository.findOne({ 
+  // 开启事务
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    // 获取盲盒（加锁）
+    const box = await queryRunner.manager.findOne(BlindBox, {
       where: { id: boxId },
-      relations: ['items'] 
+      relations: ['items'],
+      lock: { mode: 'pessimistic_write' }
     });
     
     if (!box) {
-      throw new ApiError(404, 'Blind box not found');
+      throw new ApiError(404, '盲盒不存在');
     }
 
-    const user = await this.userRepository.findOne({ 
-      where: { id: userId } 
+    // 获取用户（加锁）
+    const user = await queryRunner.manager.findOne(User, {
+      where: { id: userId },
+      lock: { mode: 'pessimistic_write' }
     });
+    
     if (!user) {
-      throw new ApiError(404, 'User not found');
+      throw new ApiError(404, '用户不存在');
     }
 
+    // 检查余额
     if (user.balance < box.price) {
-      throw new ApiError(400, 'Insufficient balance');
+      throw new ApiError(400, '余额不足');
     }
 
-    // 随机抽取物品
+    // 按权重随机抽取物品
     const totalWeight = box.items.reduce((sum, item) => sum + item.weight, 0);
     let random = Math.random() * totalWeight;
     let selectedItem: BoxItem | undefined;
@@ -87,22 +93,42 @@ async getAll(): Promise<BlindBox[]> {
     }
 
     if (!selectedItem) {
-      throw new ApiError(500, 'Failed to draw item');
+      throw new ApiError(500, '抽奖失败');
     }
 
     // 创建订单
-    const order = this.orderRepository.create({
-      user,
-      box,
-      item: selectedItem,
-      price: box.price
-    });
+    const order = new Order();
+    order.user = user;
+    order.box = box;
+    order.item = selectedItem;
+    order.price = box.price;
+    await queryRunner.manager.save(order);
 
     // 更新用户余额
     user.balance -= box.price;
-    await this.userRepository.save(user);
-    await this.orderRepository.save(order);
+    await queryRunner.manager.save(user);
 
-    return { item: selectedItem, order };
+    // 提交事务
+    await queryRunner.commitTransaction();
+
+    return { 
+      item: selectedItem, 
+      order: {
+        id: order.id,
+        price: order.price,
+        createdAt: order.createdAt,
+        item: selectedItem,
+        box: box,
+        user: user
+      }
+    };
+  } catch (error) {
+    // 回滚事务
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    // 释放连接
+    await queryRunner.release();
   }
+}
 }

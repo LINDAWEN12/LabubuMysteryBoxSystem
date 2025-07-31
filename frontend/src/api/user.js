@@ -37,9 +37,16 @@ export const rechargeBalance = async (amount = 100) => {
   try {
     const response = await api.post('/user/recharge', { amount });
     
+    // 确保获取正确的用户数据
+    const userData = response.data?.data || response.data;
+    
+    // 保持与getProfile函数一致的返回格式
     return {
-      ...response.data.data,
-      balance: parseFloat(response.data.data.balance) || 0
+      ...response,
+      data: {
+        ...userData,
+        balance: parseFloat(userData.balance) || 0
+      }
     };
   } catch (error) {
     console.error('充值失败:', error);

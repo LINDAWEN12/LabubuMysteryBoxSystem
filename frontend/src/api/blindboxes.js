@@ -73,7 +73,8 @@ export const drawBlindBox = async (boxId) => {
   try {
     const response = await api.post(`/blindboxes/${boxId}/draw`);
     
-    return response.data.data;
+    
+    return response.data;
   } catch (error) {
     console.error('抽奖API错误:', error);
     

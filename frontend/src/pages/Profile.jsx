@@ -105,7 +105,8 @@ export default function Profile() {
   const handleRecharge = async () => {
     try {
       setIsRecharging(true);
-      const updatedUser = await rechargeBalance(100); // 固定充值100元
+      const response = await rechargeBalance(100); // 固定充值100元
+      const updatedUser = response.data; // 从响应对象中获取用户数据
       setUser({
         ...updatedUser,
         avatar: formatImageUrl(updatedUser.avatar, '/images/default-avatar.jpg')
@@ -140,7 +141,35 @@ export default function Profile() {
       {/* 顶部用户信息部分 */}
       <div className="bg-gradient-to-r from-pink-400 to-purple-500 p-6 pt-12 rounded-b-3xl text-white">
         <div className="flex items-center">
-          {/* 头像部分保持不变 ... */}
+          {/* 恢复头像显示代码 */}
+          <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white mr-4">
+            {avatarPreview ? (
+              <img
+                src={avatarPreview}
+                alt="用户头像"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-white bg-opacity-20 flex items-center justify-center text-2xl">
+                👤
+              </div>
+            )}
+            <label
+              htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center text-white cursor-pointer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </label>
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
+          </div>
           <div>
             <h1 className="text-xl font-bold">{user.username}</h1>
             <div className="flex items-center">
@@ -150,9 +179,7 @@ export default function Profile() {
               <button 
                 onClick={handleRecharge}
                 disabled={isRecharging}
-                className={`text-xs px-2 py-1 rounded ${
-                  isRecharging ? 'bg-gray-400' : 'bg-white text-pink-500'
-                }`}
+                className={`text-xs px-2 py-1 rounded ${isRecharging ? 'bg-gray-400' : 'bg-white text-pink-500'}`}
               >
                 {isRecharging ? '充值中...' : '+100'}
               </button>

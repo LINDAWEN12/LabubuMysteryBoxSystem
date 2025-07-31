@@ -9,7 +9,7 @@ import { getRepository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { ApiError } from '../utils/api-error';
 import { AuthenticatedRequest } from '../types/custom-request';
-
+import { AppDataSource } from '../config/database';
 /**
  * 认证中间件函数
  * 用于验证请求中的JWT令牌，并将认证后的用户信息附加到请求对象
@@ -52,7 +52,7 @@ export async function authMiddleware(
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: number };
     
     // 5. 从数据库获取完整用户信息
-    const userRepository = getRepository(User);
+    const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOne({
       where: { id: decoded.userId },
       select: ['id', 'username', 'balance', 'avatar'], // 只选择需要的字段，避免暴露敏感信息

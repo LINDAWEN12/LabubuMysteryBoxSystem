@@ -8,7 +8,9 @@
     "build": "tsc",
     "dev": "nodemon src/app.ts",
     "test": "jest",
-    "init-data": "ts-node src/init-data.ts"
+    "init-data": "ts-node src/init-data.ts",
+    "bundle": "ncc build src/app.ts -o dist --external typeorm --external @midwayjs/core",
+    "full-build": "npm run build && npm run bundle"
   },
   "dependencies": {
     "@types/swagger-jsdoc": "^6.0.4",

@@ -35,38 +35,9 @@ class App {
    */
   constructor() {
     this.app = express();
-    this.initializeDatabase();
     this.config();
     this.initializeMiddlewares();
-    this.initializeRoutes();
-    this.initializeErrorHandling();
-    this.initializeSwagger();
-  }
-
-  /**
-   * 初始化数据库连接
-   * 使用TypeORM创建数据库连接
-   * 连接失败时会退出应用程序
-   */
-  private async initializeDatabase(): Promise<void> {
-    try {
-      await createConnection({
-        name: "default", // 明确指定连接名称
-        type: "mysql", // 数据库类型
-        host: "localhost", // 数据库主机
-        port: 3306, // 数据库端口
-        username: "root", // 数据库用户名
-        password: "tianru12", // 数据库密码
-        database: "blindbox_db", // 数据库名称
-        entities: [__dirname + "/entities/*.entity{.ts,.js}"], // 实体文件路径
-        synchronize: true, // 开发环境下自动同步实体(生产环境应禁用)
-        logging: true // 启用SQL日志
-      });
-      console.log('数据库连接成功');
-    } catch (error) {
-      console.error('数据库连接失败:', error);
-      process.exit(1); // 连接失败时退出应用
-    }
+    
   }
 
   /**
@@ -177,6 +148,10 @@ class App {
   public async start(port: number = 3001): Promise<void> {
     await initializeDatabase();
     
+    this.initializeRoutes();
+    this.initializeErrorHandling();
+    this.initializeSwagger(); 
+
     return new Promise((resolve) => {
       this.app.listen(port, () => {
         console.log(`🚀 Server running on port ${port}`);

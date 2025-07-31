@@ -33,6 +33,8 @@ export const DatabaseConfig: DataSourceOptions = {
   migrations: [], // 迁移文件
   subscribers: [], // 订阅者
   poolSize: 10, // 连接池大小
+  entitySkipConstructor: false,
+  metadataTableName: 'typeorm_metadata',
   extra: {
     connectionLimit: 100 // 额外连接限制
   }

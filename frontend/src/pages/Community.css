@@ -84,6 +84,13 @@
   color: #999;
 }
 
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .username {
   font-weight: 600;
   color: #333;

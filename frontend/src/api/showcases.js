@@ -8,6 +8,12 @@ const formatImageUrl = (path, defaultPath = '/images/default-showcase.jpg') => {
   return path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
 };
 
+// 处理用户头像URL
+const formatAvatarUrl = (path) => {
+  if (!path) return `${API_BASE_URL}/images/default.jpg`;
+  return path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+};
+
 export const getShowcases = async () => {
   try {
     const response = await api.get('/showcases');
@@ -26,6 +32,12 @@ export const getShowcases = async () => {
       image: formatImageUrl(showcase.image),
       comment: showcase.comment || '',
       userId: showcase.userId,
+      // 提取用户信息
+      user: showcase.user ? {
+        id: showcase.user.id,
+        username: showcase.user.username || `用户${showcase.user.id}`,
+        avatar: formatAvatarUrl(showcase.user.avatar)
+      } : null,
       itemId: showcase.itemId,
       createdAt: showcase.createdAt || new Date().toISOString()
     }));
@@ -56,6 +68,12 @@ export const createShowcase = async (formData) => {
       image: formatImageUrl(showcaseData.image),
       comment: showcaseData.comment || '',
       userId: showcaseData.userId,
+      // 提取用户信息
+      user: showcaseData.user ? {
+        id: showcaseData.user.id,
+        username: showcaseData.user.username || `用户${showcaseData.user.id}`,
+        avatar: formatAvatarUrl(showcaseData.user.avatar)
+      } : null,
       itemId: showcaseData.itemId,
       createdAt: showcaseData.createdAt || new Date().toISOString()
     };

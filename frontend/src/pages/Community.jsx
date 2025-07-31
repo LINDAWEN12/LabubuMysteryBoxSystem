@@ -215,9 +215,13 @@ function Community() {
             <div key={post.id} className="post-item">
               <div className="post-content">
                 <div className="post-user-info">
-                  <div className="user-avatar-placeholder"></div>
+                  <img 
+                    src={post.user?.avatar || '/images/default.jpg'} 
+                    alt="用户头像" 
+                    className="user-avatar"
+                  />
                   <div>
-                    <span className="username">用户{post.userId || '匿名'}</span>
+                    <span className="username">{post.user?.username || '匿名用户'}</span>
                     <span className="post-time">
                       {new Date(post.createdAt).toLocaleString()}
                     </span>

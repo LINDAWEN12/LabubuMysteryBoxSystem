@@ -30,4 +30,41 @@ export class UserService {
       throw new ApiError(500, '更新头像失败');
     }
   }
+
+  /**
+   * 用户充值
+   * @param userId 用户ID
+   * @param amount 充值金额
+   * @returns 更新后的用户信息
+   */
+  async recharge(userId: number, amount: number): Promise<User> {
+    const queryRunner = AppDataSource.createQueryRunner();
+    
+    try {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      // 获取用户并加锁
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' }
+      });
+
+      if (!user) {
+        throw new ApiError(404, '用户不存在');
+      }
+
+      // 更新余额
+      user.balance += amount;
+      await queryRunner.manager.save(user);
+      await queryRunner.commitTransaction();
+
+      return user;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }

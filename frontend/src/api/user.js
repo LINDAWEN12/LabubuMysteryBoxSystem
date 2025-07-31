@@ -28,3 +28,25 @@ export const getUserBalance = async () => {
     throw new Error(errorMessage);
   }
 };
+/**
+ * 用户充值
+ * @param {number} amount 充值金额
+ * @returns 更新后的用户信息
+ */
+export const rechargeBalance = async (amount = 100) => {
+  try {
+    const response = await api.post('/user/recharge', { amount });
+    
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || '充值失败');
+    }
+    
+    return {
+      ...response.data.data,
+      balance: parseFloat(response.data.data.balance) || 0
+    };
+  } catch (error) {
+    console.error('充值失败:', error);
+    throw new Error(error.response?.data?.message || '充值失败');
+  }
+};

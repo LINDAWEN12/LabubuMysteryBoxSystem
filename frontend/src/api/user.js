@@ -37,10 +37,6 @@ export const rechargeBalance = async (amount = 100) => {
   try {
     const response = await api.post('/user/recharge', { amount });
     
-    if (!response.data?.success) {
-      throw new Error(response.data?.message || '充值失败');
-    }
-    
     return {
       ...response.data.data,
       balance: parseFloat(response.data.data.balance) || 0

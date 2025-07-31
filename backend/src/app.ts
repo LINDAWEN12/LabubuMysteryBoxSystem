@@ -101,7 +101,7 @@ private async initializeDatabase(): Promise<void> {
       });
     });
     this.app.use('/api/showcases', showcaseRouter);
-    this.app.use('/api/auth', userRouter);
+    this.app.use('/api/user', userRouter);
     this.app.use('/api', protectedRouter);
   }
 

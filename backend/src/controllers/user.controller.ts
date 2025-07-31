@@ -113,7 +113,7 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/User'
  */
-router.post('/recharge', async (req: AuthenticatedRequest, res) => {
+router.post('/recharge', authMiddleware, async (req: AuthenticatedRequest, res) => {
   const queryRunner = AppDataSource.createQueryRunner();
   
   try {
@@ -155,6 +155,10 @@ router.post('/recharge', async (req: AuthenticatedRequest, res) => {
   } catch (error) {
     await queryRunner.rollbackTransaction();
     logger.error('充值失败:', error);
+    // 添加错误响应
+    res.status(400).json({
+      success: false,
+    });
   } finally {
     await queryRunner.release();
   }

@@ -18,23 +18,20 @@ RUN npm run build
 FROM node:18-alpine
 WORKDIR /app
 
-# 复制后端构建产物
-COPY --from=backend-builder /app/backend/dist ./backend/dist
-COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
-COPY --from=backend-builder /app/backend/package.json ./backend/
-COPY --from=backend-builder /app/backend/tsconfig.json ./backend/
-COPY --from=backend-builder /app/backend/uploads ./backend/uploads
-COPY --from=backend-builder /app/backend/public ./backend/public
+# 复制后端必要文件
+COPY --from=backend-builder /app/backend/dist ./dist
+COPY --from=backend-builder /app/backend/node_modules ./node_modules
+COPY --from=backend-builder /app/backend/package.json ./
+COPY --from=backend-builder /app/backend/init-data.js ./
 
-# 复制前端构建产物到后端的public目录
-COPY --from=frontend-builder /app/frontend/dist ./backend/public
+# 复制前端构建产物到public目录
+COPY --from=frontend-builder /app/frontend/dist ./public
 
-# 设置环境变量
-ENV NODE_ENV=production
+# 安装mysql客户端用于初始化数据
+RUN apk add --no-cache mysql-client
 
 # 暴露端口
 EXPOSE 3000
 
-# 启动命令
-WORKDIR /app/backend
-CMD ["node", "dist/app.js"]
+# 启动命令 (先初始化数据，再启动服务)
+CMD sh -c "node init-data.js && node dist/index.js"

@@ -3,7 +3,8 @@
 作者：林天问 241250034
 
 ## 项目简介
-泡泡盲盒抽奖系统是一个基于前后端分离架构的在线盲盒销售与抽奖平台。用户可以浏览不同类型的盲盒，进行购买和抽奖，查看自己的订单和收藏。
+泡泡盲盒抽奖系统是一个基于前后端分离架构的在线盲盒销售与抽奖平台。用户可以浏览不同类型的盲盒，进行购买和抽奖，查看自己的订单和收藏。本地运行和docker运行中推荐使用本地运行。数据库使用mysql。本地运行成立后，在 
+http://localhost:3000/可以打开web页面。
 
 ## 技术栈
 
@@ -80,7 +81,7 @@ git clone <项目仓库地址>
 cd LabubuMysteryBoxSystem
 ```
 
-2. 安装依赖
+2. 安装依赖和数据库
 ```bash
 # 后端依赖
 cd backend
@@ -90,6 +91,9 @@ npm install
 cd ../frontend
 npm install
 ```
+数据库（在数据库mysql命令行执行）
+CREATE DATABASE IF NOT EXISTS blindbox_db 
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 3. 配置环境变量
 在backend目录下创建.env文件，添加以下内容：
@@ -107,10 +111,11 @@ JWT_SECRET=your_jwt_secret
 ```
 
 4. 初始化数据库
+## 数据库设置
 ```bash
 # 确保MySQL服务已启动
 cd backend
-npm run init-db
+npm run init-data
 ```
 
 5. 启动服务
@@ -130,4 +135,4 @@ npm run dev
 ```bash
 docker-compose up --build
 ```
-3. 访问应用：http://localhost:8080
+3. 访问应用：http://localhost:3000
